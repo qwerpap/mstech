@@ -1,19 +1,15 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/services/local_storage_service.dart';
 
 const _kSubscriptionKey = 'is_subscribed';
 
 class PaywallRepository {
-  const PaywallRepository();
+  final LocalStorageService storage;
 
-  Future<bool> getSubscription() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSubscriptionKey) ?? false;
-  }
+  const PaywallRepository(this.storage);
 
-  Future<void> setSubscription(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kSubscriptionKey, value);
-  }
+  Future<bool> getSubscription() => storage.getBool(_kSubscriptionKey, defaultValue: false);
+
+  Future<void> setSubscription(bool value) => storage.setBool(_kSubscriptionKey, value);
 }
 
 

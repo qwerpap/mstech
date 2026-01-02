@@ -10,7 +10,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../paywall/bloc/paywall_cubit.dart';
 import '../../paywall/bloc/paywall_state.dart';
 
-import '../../../core/navigation/data/constants/navigation_constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PaywallScreen extends StatelessWidget {

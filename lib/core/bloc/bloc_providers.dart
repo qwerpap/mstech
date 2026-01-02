@@ -14,6 +14,7 @@ import '../../features/paywall/data/paywall_repository.dart';
 import '../../features/paywall/domain/paywall_usecases.dart';
 import '../../features/auth/data/auth_repository.dart';
 import '../../features/auth/domain/auth_usecases.dart';
+import '../services/local_storage_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -44,8 +45,11 @@ class BlocProviders {
   }
 
   static void _registerPaywallCubit() {
-    // register repository and usecases
-    getIt.registerLazySingleton<PaywallRepository>(() => const PaywallRepository());
+    // register local storage service
+    getIt.registerLazySingleton<LocalStorageService>(() => LocalStorageService());
+
+    // register repository and usecases using the storage service
+    getIt.registerLazySingleton<PaywallRepository>(() => PaywallRepository(getIt<LocalStorageService>()));
     getIt.registerFactory(() => GetSubscriptionStatus(getIt<PaywallRepository>()));
     getIt.registerFactory(() => SubscribeUseCase(getIt<PaywallRepository>()));
     getIt.registerFactory(() => UnsubscribeUseCase(getIt<PaywallRepository>()));
@@ -59,7 +63,12 @@ class BlocProviders {
   }
 
   static void _registerAuthCubit() {
-    getIt.registerLazySingleton<AuthRepository>(() => const AuthRepository());
+    // ensure local storage service is registered (idempotent)
+    if (!getIt.isRegistered<LocalStorageService>()) {
+      getIt.registerLazySingleton<LocalStorageService>(() => LocalStorageService());
+    }
+
+    getIt.registerLazySingleton<AuthRepository>(() => AuthRepository(getIt<LocalStorageService>()));
     getIt.registerFactory(() => GetAuthStatus(getIt<AuthRepository>()));
     getIt.registerFactory(() => LoginUseCase(getIt<AuthRepository>()));
     getIt.registerFactory(() => LogoutUseCase(getIt<AuthRepository>()));

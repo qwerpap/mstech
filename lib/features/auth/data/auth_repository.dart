@@ -1,19 +1,15 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/services/local_storage_service.dart';
 
 const _kLoggedInKey = 'is_logged_in';
 
 class AuthRepository {
-  const AuthRepository();
+  final LocalStorageService storage;
 
-  Future<bool> getLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kLoggedInKey) ?? false;
-  }
+  const AuthRepository(this.storage);
 
-  Future<void> setLoggedIn(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kLoggedInKey, value);
-  }
+  Future<bool> getLoggedIn() => storage.getBool(_kLoggedInKey, defaultValue: false);
+
+  Future<void> setLoggedIn(bool value) => storage.setBool(_kLoggedInKey, value);
 }
 
 
