@@ -1,58 +1,41 @@
 # mstech — short project overview
+ # mstech — краткое описание проекта
 
-This README summarises architecture, project layout, key design decisions and suggested improvements.
+Коротко: это Flutter-приложение с простым онбордингом, фичей подписки (paywall) и главным экраном (home). Основная цель — демонстрация архитектурного подхода и рабочих пользовательских потоков.
 
-Architecture
-- Clean Architecture-ish layering: presentation → domain → data.
-  - Presentation: Cubits / UI (features/*/view + bloc).
-  - Domain: usecases (features/*/domain).
-  - Data: repositories (features/*/data) wrapping persistence/services.
-- DI: GetIt centralised in `lib/core/bloc/bloc_providers.dart`.
-- State: flutter_bloc (Cubit) for business logic and reactive UI.
-- Persistence: SharedPreferences wrapped by `LocalStorageService` (`lib/core/services/local_storage_service.dart`).
-- Navigation: go_router with a central `createAppRouter` (`lib/core/navigation/presentation/app_router.dart`).
+Архитектура
+- Структура в духе Clean Architecture: presentation → domain → data.
+  - presentation: UI + Cubit/Bloc, файлы в `features/*/view` и `features/*/bloc`.
+  - domain: usecases — бизнес-операции (`features/*/domain`).
+  - data: репозитории, обёртки для локального хранения (`features/*/data`).
+- DI: `GetIt` (центральная регистрация в `lib/core/bloc/bloc_providers.dart`).
+- State management: `flutter_bloc` (Cubit) — реактивный UI.
+- Локальное хранилище: `LocalStorageService` (обёртка над SharedPreferences) в `lib/core/services`.
+- Навигация: `go_router` через `createAppRouter` (`lib/core/navigation/presentation/app_router.dart`).
 
-Project structure (high level)
-- lib/
-  - core/
-    - bloc/ (DI & providers)
-    - navigation/ (router + bottom nav)
-    - services/ (LocalStorageService)
-    - shared/widgets (reusable UI)
-    - theme (tokens: colors, spacing, fonts)
-  - features/
-    - onboarding/ (view, cubit, data)
-    - home/ (view, cubit, widgets)
-    - paywall/ (view, bloc, data, domain)
-    - auth/ (login state, repo/usecases)
-    - profile/, favourites/, notifications/ (views)
-  - main.dart (bootstrap: DI + router)
+Структура проекта (основное)
+- `lib/core/` — DI, навигация, общие сервисы, shared-виджеты, тема.
+- `lib/features/` — фичи по папкам:
+  - `onboarding` — онбординг + cubit.
+  - `paywall` — UI, репозиторий, usecases, cubit.
+  - `auth` — хранение статуса входа (repo, usecase, cubit).
+  - `home`, `profile`, `favourites`, `notifications` — экраны и виджеты.
+- `lib/main.dart` — bootstrap: инициализация DI, выбор начального роутера.
 
-User flows / minimal UX logic
-- Onboarding: 3 pages; Skip or Get Started marks user logged-in and navigates to Home.
-- Paywall: two plans; "Start Free Trial" simulates purchase, persists subscription, closes Paywall and returns Home; Home updates via PaywallCubit.
-- Profile / other screens: show live subscription status and allow unsubscribe and logout. Logout clears login flag — next app start shows Onboarding.
+Коротко о пользовательских потоках
+- Пользователь видит онбординг (3 экрана). Skip или Get Started помечают пользователя как вошедшего и переводят на Home.
+- Paywall: имитация покупки; при "Start Free Trial" подписка сохраняется, Paywall закрывается и Home обновляется через singleton PaywallCubit.
+- Profile/Favourites/Notifications: показывают текущий статус подписки в реальном времени; доступны кнопки "Удалить подписку" и "Выйти с аккаунта" (logout сбрасывает флаг logged-in).
 
-What was refactored / decisions taken
-- Introduced `LocalStorageService` to centralise SharedPreferences access and improve testability.
-- Repositories (data) now use the service; usecases wrap repository calls; cubits call usecases — better separation.
-- Registered repositories/usecases/cubits in GetIt for single source of truth and easy mocking.
-- Kept UI unchanged where possible; reused widgets across features.
+Что улучшено (в работе)
+- Вынесено взаимодействие с SharedPreferences в `LocalStorageService` — упрощает тестирование и замену слоя хранения.
+- Репозитории используют сервис хранения; usecases инкапсулируют операции; cubits опираются на usecases — чёткая разделённость ответственности.
+- DI (GetIt) предоставляет репозитории, usecases и cubits как singleton/фабрики для консистентного состояния.
 
-Improvements to make with more time (prioritised)
-1. Add interfaces (abstract classes) for repositories and inject them — enables easier unit testing with mocks.
-2. Add unit tests for usecases and cubits (mock LocalStorageService).
-3. Add widget / integration tests for critical flows (onboarding → home, paywall).
-4. Replace local subscription persistence with server-side receipt validation for production billing.
-5. CI pipeline: lint, format, test runs on PRs.
+Дальнейшие улучшения при наличии времени
+1. Ввести интерфейсы (abstract) для репозиториев и покрыть usecases/cubits unit-тестами (моки `LocalStorageService`).  
+2. Добавить widget/integration тесты критичных сценариев.  
+3. Интегрировать серверную проверку подписок (receipt validation) для продакшн-валидации.  
+4. Настроить CI (lint, format, test) и pre-commit hooks.
 
-How we evaluate this work
-- Clear reasoning and tradeoffs in decisions.
-- Fast adaptation and independent problem solving.
-- Initiative — improvements beyond initial scope.
-- Code structure and cleanliness (consistent tokens, const usage, minimal rebuilds).
-- Logical UI/UX (flows working end-to-end even with minimal design).
-
-If you want next:
-- I can add abstract repository interfaces + 2 unit tests for PaywallCubit (mocking LocalStorageService).
-- Or create CI job templates (GitHub Actions) for lint + test runs.
+Если нужно — могу сразу добавить примеры unit-тестов для `PaywallCubit` и шаблон CI.
